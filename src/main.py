@@ -1,4 +1,4 @@
-from src.client import HemnetClient
+from client import HemnetClient
 
 
 def main():
