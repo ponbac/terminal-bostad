@@ -1,7 +1,6 @@
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field
 import requests
-import json
 
 
 class Coordinates(BaseModel):
@@ -153,8 +152,6 @@ class HemnetRequest:
 
         data = HemnetListingsResponse(**response.json())
         apollo_state = data.pageProps.apollo_state
-
-        print(json.dumps(apollo_state.model_dump(), indent=4, ensure_ascii=False))
 
         listings = []
         for key, value in apollo_state.model_dump().items():
