@@ -1,9 +1,9 @@
-from request import HemnetRequest
+from src.client import HemnetClient
 
 
 def main():
-    hemnet = HemnetRequest()
-    listings = hemnet.get_listings(location_ids=["18054"], page="1")
+    hemnet_client = HemnetClient()
+    listings = hemnet_client.get_listings(location_ids=["18054"], page="1")
 
     for listing in listings:
         print(listing)
