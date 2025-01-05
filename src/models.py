@@ -148,7 +148,6 @@ class SaleCard(BaseModel):
         return {
             "id": self.id,
             "listingId": self.listingId,
-            "slug": self.slug,
             "streetAddress": self.streetAddress,
             "soldAt": self.soldAt,
             "soldAtLabel": self.soldAtLabel,
@@ -158,19 +157,12 @@ class SaleCard(BaseModel):
             "locationDescription": self.locationDescription,
             "fee": fee,
             "squareMeterPrice": square_meter_price,
-            "housingForm": self.housingForm.model_dump_json(),
             "rooms": self.rooms,
-            "landArea": self.landArea,
             "priceChange": price_change,
             "brokerAgencyName": self.brokerAgencyName,
-            "brokerAgencyThumbnail": self.brokerAgencyThumbnail,
-            "brokerThumbnail": self.brokerThumbnail,
             "brokerName": self.brokerName,
             "labels": label_str,
-            "product": self.product,
-            "recordType": self.recordType,
-            "latitude": self.coordinates.lat,
-            "longitude": self.coordinates.long,
+            "url": f"https://www.hemnet.se/salda/{self.slug}",
         }
 
     def __str__(self) -> str:
