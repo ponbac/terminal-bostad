@@ -100,7 +100,9 @@ def main():
     # save_listings_to_csv(for_sale_listings, "for_sale")
 
     # Get sold listings
-    sold_listings = get_paginated_listings(hemnet_client.get_sold_listings, max_pages=1)
+    sold_listings = get_paginated_listings(
+        hemnet_client.get_sold_listings, max_pages=None
+    )
     print(f"Found total {len(sold_listings)} sold listings")
     save_listings_to_csv([listing.to_csv_row() for listing in sold_listings], "sold")
 

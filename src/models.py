@@ -110,8 +110,6 @@ class SaleCard(BaseModel):
     def to_csv_row(self) -> dict:
         # Helper function to clean price strings
         def clean_price(price_str: str) -> Optional[int]:
-            # Debug print
-            print(f"Price string: '{price_str}'")
             # Handle missing price
             if price_str == "Prissaknas" or price_str == "Pris saknas":
                 return None
@@ -133,7 +131,13 @@ class SaleCard(BaseModel):
         # Clean numeric values from currency and units
         asking_price = clean_price(self.askingPrice)
         final_price = clean_price(self.finalPrice)
-        living_area = float(self.livingArea.replace("m²", "").replace(",", "."))
+        living_area = (
+            self.livingArea.replace("m²", "").replace(" ", "").replace("\xa0", "")
+        )
+        try:
+            living_area = float(living_area)
+        except (ValueError, AttributeError):
+            living_area = living_area
         fee = clean_price(self.fee) if self.fee else None
         square_meter_price = clean_price(self.squareMeterPrice.replace("kr/m²", ""))
         price_change = clean_percentage(self.priceChange) if self.priceChange else None
