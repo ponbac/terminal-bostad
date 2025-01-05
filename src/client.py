@@ -27,9 +27,7 @@ class HemnetClient:
             "x-nextjs-data": "1",
         }
 
-    def get_listings(
-        self, location_ids: list[str], page: str = "1"
-    ) -> List[ListingCard]:
+    def get_listings(self, location_ids: list[str], page: int = 1) -> List[ListingCard]:
         """
         Fetch listings from Hemnet and return a list of ListingCard objects
 
@@ -43,7 +41,7 @@ class HemnetClient:
         params = {
             "item_types[]": "bostadsratt",
             "location_ids[]": location_ids,
-            "page": page,
+            "page": str(page),
         }
 
         response = requests.get(self.BASE_URL, headers=self.headers, params=params)

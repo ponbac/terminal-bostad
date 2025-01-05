@@ -1,13 +1,15 @@
+from typing import Literal
 from client import HemnetClient
 
-SUNDSVALL_LOCATION_ID = "18054"
+
+LOCATIONS: dict[Literal["Sundsvall"], str] = {
+    "Sundsvall": "18054",
+}
 
 
 def main():
     hemnet_client = HemnetClient()
-    listings = hemnet_client.get_listings(
-        location_ids=[SUNDSVALL_LOCATION_ID], page="1"
-    )
+    listings = hemnet_client.get_listings(location_ids=[LOCATIONS["Sundsvall"]], page=1)
 
     for listing in listings:
         print(listing)
