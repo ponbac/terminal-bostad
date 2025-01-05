@@ -7,7 +7,7 @@ from models import ListingCard, HemnetListingsResponse
 class HemnetClient:
     """Handles requests to Hemnet's API"""
 
-    BASE_URL = "https://www.hemnet.se/_next/data/JOwnZSqZ4XsxrYZXuSlZe/bostader.json"
+    BASE_URL = "https://www.hemnet.se/_next/data/ZbTIGtigbip8_BxHWbd_z/bostader.json"
 
     def __init__(self):
         self.headers = {
