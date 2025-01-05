@@ -38,7 +38,9 @@ def get_paginated_listings(
     while True if max_pages is None else page <= max_pages:
         try:
             page_listings = fetch_func(LOCATIONS, page)
-            print(f"Found {len(page_listings)} listings on page {page}")
+            print(
+                f"Found {len(page_listings)} listings on page {page}, total listings: {len(listings)}"
+            )
             if not page_listings:
                 break
             listings.extend(page_listings)
