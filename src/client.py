@@ -1,13 +1,15 @@
 from typing import List
 import requests
 
-from models import ListingCard, HemnetListingsResponse
+from models import ListingCard, HemnetListingsResponse, SaleCard
 
 
 class HemnetClient:
     """Handles requests to Hemnet's API"""
 
-    BASE_URL = "https://www.hemnet.se/_next/data/ZbTIGtigbip8_BxHWbd_z/bostader.json"
+    BASE_URL = "https://www.hemnet.se/_next/data/ZbTIGtigbip8_BxHWbd_z"
+    LISTINGS_URL = f"{BASE_URL}/bostader.json"
+    SOLD_URL = f"{BASE_URL}/salda/bostader.json"
 
     def __init__(self):
         self.headers = {
@@ -40,11 +42,12 @@ class HemnetClient:
         """
         params = {
             "item_types[]": "bostadsratt",
-            "location_ids[]": location_ids,
+            "living_area_min": "40",
+            **{f"location_ids[]": location_id for location_id in location_ids},
             "page": str(page),
         }
 
-        response = requests.get(self.BASE_URL, headers=self.headers, params=params)
+        response = requests.get(self.LISTINGS_URL, headers=self.headers, params=params)
         response.raise_for_status()
 
         data = HemnetListingsResponse(**response.json())
@@ -56,3 +59,36 @@ class HemnetClient:
                 listings.append(ListingCard(**value))
 
         return listings
+
+    def get_sold_listings(
+        self, location_ids: list[str], page: int = 1
+    ) -> List[SaleCard]:
+        """
+        Fetch sold listings from Hemnet and return a list of SaleCard objects
+
+        Args:
+            location_ids: List of location IDs to search in
+            page: Page number to fetch
+
+        Returns:
+            List of SaleCard objects containing the sold listing data
+        """
+        params = {
+            "item_types[]": "bostadsratt",
+            "living_area_min": "40",
+            **{f"location_ids[]": location_id for location_id in location_ids},
+            "page": str(page),
+        }
+
+        response = requests.get(self.SOLD_URL, headers=self.headers, params=params)
+        response.raise_for_status()
+
+        data = HemnetListingsResponse(**response.json())
+        apollo_state = data.pageProps.apollo_state
+
+        sold_listings = []
+        for key, value in apollo_state.model_dump().items():
+            if key.startswith("SaleCard:"):
+                sold_listings.append(SaleCard(**value))
+
+        return sold_listings

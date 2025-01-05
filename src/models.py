@@ -27,13 +27,13 @@ class ListingCard(BaseModel):
     """Represents a single listing from Hemnet"""
 
     id: str
-    activePackage: str
-    askingPrice: str
-    brokerAgencyLogo: str
-    brokerAgencyName: str
+    activePackage: Optional[str]
+    askingPrice: Optional[str]
+    brokerAgencyLogo: Optional[str]
+    brokerAgencyName: Optional[str]
     coordinates: Coordinates
     description: str
-    fee: str
+    fee: Optional[str]
     floor: Optional[str]
     housingForm: HousingForm
     labels: List[Label]
@@ -45,11 +45,11 @@ class ListingCard(BaseModel):
     publishedAt: str
     recordType: str
     removedBeforeShowing: bool
-    rooms: str
+    rooms: Optional[str]
     saved: bool
     showings: List[str]
     slug: str
-    squareMeterPrice: str
+    squareMeterPrice: Optional[str]
     streetAddress: str
     thumbnails: List[str] = Field(alias='thumbnails({"format":"ITEMGALLERY_CUT"})')
     upcoming: bool
@@ -76,6 +76,122 @@ class ListingCard(BaseModel):
 {self.description}
 
 🔗 https://www.hemnet.se/bostad/{self.slug}
+"""
+
+
+class SaleCard(BaseModel):
+    """Represents a sold property listing from Hemnet"""
+
+    id: str
+    listingId: str
+    slug: str
+    streetAddress: str
+    soldAt: str
+    soldAtLabel: str
+    askingPrice: str
+    finalPrice: str
+    livingArea: str
+    locationDescription: str
+    fee: Optional[str]
+    squareMeterPrice: str
+    housingForm: HousingForm
+    rooms: str
+    landArea: Optional[str]
+    priceChange: Optional[str]
+    coordinates: Coordinates
+    brokerAgencyName: str
+    brokerAgencyThumbnail: Optional[str]
+    brokerThumbnail: Optional[str]
+    brokerName: Optional[str]
+    labels: List[Label]
+    product: str
+    recordType: str
+
+    def to_csv_row(self) -> dict:
+        # Helper function to clean price strings
+        def clean_price(price_str: str) -> Optional[int]:
+            # Debug print
+            print(f"Price string: '{price_str}'")
+            # Handle missing price
+            if price_str == "Prissaknas" or price_str == "Pris saknas":
+                return None
+            # Remove currency symbol, month indicator, spaces (including non-breaking spaces), and convert to int
+            return int(
+                price_str.replace("kr", "")
+                .replace("/mån", "")
+                .replace("\xa0", "")
+                .replace(" ", "")
+            )
+
+        # Helper function to clean percentage strings
+        def clean_percentage(pct_str: str) -> float:
+            # Handle ±0 case
+            if "±0" in pct_str:
+                return 0.0
+            return float(pct_str.replace("%", "").replace(",", ".").replace("\xa0", ""))
+
+        # Clean numeric values from currency and units
+        asking_price = clean_price(self.askingPrice)
+        final_price = clean_price(self.finalPrice)
+        living_area = float(self.livingArea.replace("m²", "").replace(",", "."))
+        fee = clean_price(self.fee) if self.fee else None
+        square_meter_price = clean_price(self.squareMeterPrice.replace("kr/m²", ""))
+        price_change = clean_percentage(self.priceChange) if self.priceChange else None
+
+        # Convert labels to string format (e.g., "FEATURE:Balkong;FEATURE:Hiss")
+        label_str = ";".join(
+            f"{label.category}:{label.text}"
+            for label in self.labels
+            if label.text is not None
+        )
+
+        return {
+            "id": self.id,
+            "listingId": self.listingId,
+            "slug": self.slug,
+            "streetAddress": self.streetAddress,
+            "soldAt": self.soldAt,
+            "soldAtLabel": self.soldAtLabel,
+            "askingPrice": asking_price,
+            "finalPrice": final_price,
+            "livingArea": living_area,
+            "locationDescription": self.locationDescription,
+            "fee": fee,
+            "squareMeterPrice": square_meter_price,
+            "housingForm": self.housingForm.model_dump_json(),
+            "rooms": self.rooms,
+            "landArea": self.landArea,
+            "priceChange": price_change,
+            "brokerAgencyName": self.brokerAgencyName,
+            "brokerAgencyThumbnail": self.brokerAgencyThumbnail,
+            "brokerThumbnail": self.brokerThumbnail,
+            "brokerName": self.brokerName,
+            "labels": label_str,
+            "product": self.product,
+            "recordType": self.recordType,
+            "latitude": self.coordinates.lat,
+            "longitude": self.coordinates.long,
+        }
+
+    def __str__(self) -> str:
+        broker_text = f"\nMäklare: {self.brokerName}" if self.brokerName else ""
+        features = [
+            label.text
+            for label in self.labels
+            if label.category == "FEATURE" and label.text is not None
+        ]
+        features_text = f"\nEgenskaper: {', '.join(features)}" if features else ""
+
+        return f"""
+🏠 {self.streetAddress}
+📍 {self.locationDescription}
+💰 {self.finalPrice} (Utgångspris: {self.askingPrice})
+📊 Prisförändring: {self.priceChange}
+🏗️  {self.rooms} | {self.livingArea}
+💸 Avgift: {self.fee}{broker_text}{features_text}
+📅 {self.soldAtLabel}
+
+🔗 https://www.hemnet.se/salda/{self.slug}
 """
 
 
