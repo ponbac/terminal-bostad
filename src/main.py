@@ -22,7 +22,9 @@ LOCATIONS: list[str] = [
 
 
 def get_paginated_listings(
-    fetch_func: Callable[[list[str], int], List[T]], max_pages: Optional[int] = None
+    fetch_func: Callable[[list[str], int], List[T]],
+    start_page: int = 1,
+    max_pages: Optional[int] = None,
 ) -> List[T]:
     """
     Generic function to fetch paginated listings and remove duplicates.
@@ -34,7 +36,7 @@ def get_paginated_listings(
         List of unique listings
     """
     listings = []
-    page = 1
+    page = start_page
     while True if max_pages is None else page <= max_pages:
         try:
             page_listings = fetch_func(LOCATIONS, page)
@@ -43,8 +45,13 @@ def get_paginated_listings(
             )
             if not page_listings:
                 break
-            listings.extend(page_listings)
-            if len(page_listings) < 50:
+            new_listings = [
+                listing
+                for listing in page_listings
+                if listing.id not in [listing.id for listing in listings]
+            ]
+            listings.extend(new_listings)
+            if len(new_listings) == 0:
                 break
             page += 1
             # Sleep between 1-5 seconds before next request
@@ -53,15 +60,7 @@ def get_paginated_listings(
             print(f"Error: {e}")
             break
 
-    # Remove duplicate listings by keeping only the first occurrence of each ID
-    seen_ids = set()
-    unique_listings = []
-    for listing in listings:
-        if listing.id not in seen_ids:
-            seen_ids.add(listing.id)
-            unique_listings.append(listing)
-
-    return unique_listings
+    return listings
 
 
 def save_listings_to_csv(listings: List[dict], filename_prefix: str) -> None:
@@ -101,7 +100,7 @@ def main():
 
     # Get sold listings
     sold_listings = get_paginated_listings(
-        hemnet_client.get_sold_listings, max_pages=None
+        hemnet_client.get_sold_listings, start_page=26, max_pages=None
     )
     print(f"Found total {len(sold_listings)} sold listings")
     save_listings_to_csv([listing.to_csv_row() for listing in sold_listings], "sold")
